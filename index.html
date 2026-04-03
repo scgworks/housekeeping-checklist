@@ -75,20 +75,20 @@
 // ===== CATEGORY SETUP WITH ICONS =====
 const categories = {
   "Kitchen": [
-    { name: "Red", required: 2, img: "coffee.png" },
+    { name: "Red", required: 4, img: "coffee.png" },
     { name: "Green", required: 2, img: "coffee.png" },
     { name: "Blue", required: 2, img: "coffee.png" },
-    { name: "Espresso", required: 2, img: "coffee.png" },
+    { name: "Espresso", required: 4, img: "coffee.png" },
     { name: "Decaf", required: 2, img: "coffee.png" },
-    { name: "Salt Pepper", required: 1, img: "salt.png" },
+    { name: "Salt Pepper", required: 6, img: "salt.png" },
     { name: "Washing Liquid", required: 1, img: "dish-liquid.png" },
     { name: "Dishwashing Tablet", required: 2, img: "tablet.png" },
-    { name: "Kitchen Towel", required: 2, img: "towel.png" },
+    { name: "Kitchen Towel", required: 1, img: "towel.png" },
     { name: "Chucks", required: 1, img: "cloth.png" },
     { name: "Brush", required: 1, img: "brush.png" }
   ],
   "Bathroom": [
-    { name: "Soap Bar", required: 2, img: "soap.png" },
+    { name: "Soap Bar", required: 1, img: "soap.png" },
     { name: "Toilet Paper", required: 2, img: "toilet-paper.png" },
     { name: "Shampoo", required: 1, img: "shampoo.png" },
     { name: "Conditioner", required: 1, img: "conditioner.png" },
@@ -103,7 +103,7 @@ const categories = {
     { name: "Laundry Liquid", required: 1, img: "detergent.png" }
   ],
   "Study & Foyer": [
-    { name: "Cup Tray", required: 1, img: "tray.png" },
+    { name: "Cup Tray", required: 6, img: "tray.png" },
     { name: "Notes", required: 1, img: "note.png" }
   ]
 };
@@ -139,7 +139,7 @@ function render() {
         <button onclick="change('${item.name}', -1)">-</button>
         <span class="count">${counts[item.name]}</span>
         <button onclick="change('${item.name}', 1)">+</button>
-        <span class="required">/${item.required}</span>
+        <span class="required"> || ${item.required}</span>
       `;
 
       list.appendChild(div);
