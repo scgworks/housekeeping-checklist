@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Housekeeping Tracker</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      max-width: 450px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 20px;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 40px 1fr auto auto auto auto;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .item img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    button {
+      padding: 5px 10px;
+      font-size: 16px;
+    }
+
+    .count {
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .required {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .clear-btn {
+      margin-top: 20px;
+      width: 100%;
+      background: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Room Refill</h1>
+
+<div id="list"></div>
+
+<button class="clear-btn" onclick="clearAll()">Clear All</button>
+
+<script>
+// ===== CATEGORY SETUP WITH ICONS =====
+const categories = {
+  "Kitchen": [
+    { name: "Red", required: 2, img: "coffee.png" },
+    { name: "Green", required: 2, img: "coffee.png" },
+    { name: "Blue", required: 2, img: "coffee.png" },
+    { name: "Espresso", required: 2, img: "coffee.png" },
+    { name: "Decaf", required: 2, img: "coffee.png" },
+    { name: "Salt Pepper", required: 1, img: "salt.png" },
+    { name: "Washing Liquid", required: 1, img: "dish-liquid.png" },
+    { name: "Dishwashing Tablet", required: 2, img: "tablet.png" },
+    { name: "Kitchen Towel", required: 2, img: "towel.png" },
+    { name: "Chucks", required: 1, img: "cloth.png" },
+    { name: "Brush", required: 1, img: "brush.png" }
+  ],
+  "Bathroom": [
+    { name: "Soap Bar", required: 2, img: "soap.png" },
+    { name: "Toilet Paper", required: 2, img: "toilet-paper.png" },
+    { name: "Shampoo", required: 1, img: "shampoo.png" },
+    { name: "Conditioner", required: 1, img: "conditioner.png" },
+    { name: "Body Wash", required: 1, img: "bodywash.png" },
+    { name: "Body Lotion", required: 1, img: "lotion.png" }
+  ],
+  "Bedroom": [
+    { name: "Laundry Bag", required: 1, img: "bag.png" },
+    { name: "Laundry Note", required: 1, img: "note.png" }
+  ],
+  "Laundry": [
+    { name: "Laundry Liquid", required: 1, img: "detergent.png" }
+  ],
+  "Study & Foyer": [
+    { name: "Cup Tray", required: 1, img: "tray.png" },
+    { name: "Notes", required: 1, img: "note.png" }
+  ]
+};
+
+// ===== STORAGE =====
+let counts = JSON.parse(localStorage.getItem("counts")) || {};
+
+Object.values(categories).flat().forEach(item => {
+  if (!counts[item.name]) counts[item.name] = 0;
+});
+
+function save() {
+  localStorage.setItem("counts", JSON.stringify(counts));
+}
+
+// ===== RENDER =====
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  Object.keys(categories).forEach(category => {
+    const heading = document.createElement("h2");
+    heading.textContent = category;
+    list.appendChild(heading);
+
+    categories[category].forEach(item => {
+      const div = document.createElement("div");
+      div.className = "item";
+
+      div.innerHTML = `
+        <img src="${item.img}" alt="">
+        <span>${item.name}</span>
+        <button onclick="change('${item.name}', -1)">-</button>
+        <span class="count">${counts[item.name]}</span>
+        <button onclick="change('${item.name}', 1)">+</button>
+        <span class="required">/${item.required}</span>
+      `;
+
+      list.appendChild(div);
+    });
+  });
+}
+
+// ===== ACTIONS =====
+function change(item, value) {
+  counts[item] += value;
+  if (counts[item] < 0) counts[item] = 0;
+  save();
+  render();
+}
+
+function clearAll() {
+  Object.keys(counts).forEach(item => counts[item] = 0);
+  save();
+  render();
+}
+
+render();
+
+// ===== SERVICE WORKER =====
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
