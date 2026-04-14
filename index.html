@@ -1,174 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Housekeeping Tracker</title>
+<meta charset="UTF-8">
+<title>Housekeeping Tracker</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#000000">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      max-width: 450px;
-      margin: auto;
-    }
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  padding: 12px;
+}
 
-    h1 {
-      text-align: center;
-    }
+h1 {
+  text-align: center;
+}
 
-    h2 {
-      margin-top: 20px;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-    }
+/* Controls */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
 
-    .item {
-      display: grid;
-      grid-template-columns: 40px 1fr auto auto auto auto;
-      align-items: center;
-      gap: 12px;
-      margin: 10px 0;
-    }
+.controls input, .controls select {
+  padding: 10px;
+  font-size: 16px;
+}
 
-    .item img {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
-    }
+/* Buttons */
+.copy-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  font-size: 16px;
+}
 
-    button {
-      padding: 5px 10px;
-      font-size: 16px;
-    }
+.clear-btn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  background: green;
+  color: white;
+}
 
-    .count {
-      min-width: 20px;
-      text-align: center;
-    }
+/* Category */
+h2 {
+  margin-top: 20px;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 5px;
+}
 
-    .required {
-      font-size: 14px;
-      color: #555;
-      margin-left: 10px;
-      font-weight: bold;
-    }
+/* Header row */
+.header-row {
+  display: grid;
+  grid-template-columns: 50% 25% 25%;
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+  margin-bottom: 5px;
+}
 
-    .clear-btn {
-      margin-top: 20px;
-      width: 100%;
-      background: red;
-      color: white;
-    }
-  </style>
+/* Item row */
+.item {
+  display: grid;
+  grid-template-columns: 50% 25% 25%;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+/* Buttons */
+button {
+  padding: 6px 10px;
+  font-size: 16px;
+}
+
+/* Count */
+.count {
+  min-width: 40px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Required */
+.required {
+  text-align: center;
+  font-weight: bold;
+  color: #000;
+}
+
+.complete {
+  background-color: #d4edda;
+}
+
+.missing {
+  background-color: #f8d7da;
+}
+
+/* Flash animation */
+@keyframes flash {
+  0% { background-color: yellow; }
+  100% { background-color: transparent; }
+}
+
+.flash {
+  animation: flash 0.4s ease;
+}
+</style>
 </head>
+
 <body>
 
 <h1>Room Refill</h1>
 
+<div class="controls">
+  <input type="text" id="roomNumber" placeholder="Room Number">
+
+  <select id="roomType">
+    <option value="studio">Studio</option>
+    <option value="br1">1BR</option>
+    <option value="br2">2BR</option>
+    <option value="br3">3BR</option>
+  </select>
+
+  <select id="serviceType">
+    <option>Service Room</option>
+    <option>Rush Room</option>
+    <option>Departure</option>
+    <option>Arrival</option>
+  </select>
+</div>
+
+<button class="copy-btn" onclick="copyMessage()">Copy Message</button>
+
+<button class="clear-btn" onclick="clearAll()">Refresh</button>
+
 <div id="list"></div>
 
-<button class="clear-btn" onclick="clearAll()">Clear All</button>
-
 <script>
-// ===== CATEGORY SETUP WITH ICONS =====
+// 1. DATA DEFINITION FIRST
 const categories = {
   "Kitchen": [
-    { name: "Red", required: 4, img: "coffee.png" },
-    { name: "Green", required: 2, img: "coffee.png" },
-    { name: "Blue", required: 2, img: "coffee.png" },
-    { name: "Espresso", required: 4, img: "coffee.png" },
-    { name: "Decaf", required: 2, img: "coffee.png" },
-    { name: "Salt Pepper", required: 6, img: "salt.png" },
-    { name: "Washing Liquid", required: 1, img: "dish-liquid.png" },
-    { name: "Dishwashing Tablet", required: 2, img: "tablet.png" },
-    { name: "Kitchen Towel", required: 1, img: "towel.png" },
-    { name: "Chucks", required: 1, img: "cloth.png" },
-    { name: "Brush", required: 1, img: "brush.png" }
+    { name: "Sugar", studio: 12, br1: 12, br2: 12, br3: 12 },
+    { name: "Equal", studio: 4, br1: 4, br2: 4, br3: 4 },
+    { name: "English Breakfast Tea", studio: 4, br1: 4, br2: 6, br3: 6 },
+    { name: "Green Tea", studio: 2, br1: 2, br2: 4, br3: 4 },
+    { name: "Peppermint Tea", studio: 2, br1: 2, br2: 4, br3: 4 },
+    { name: "Espresso Coffee Pod", studio: 4, br1: 4, br2: 6, br3: 6 },
+    { name: "Decaf Coffee Pod", studio: 2, br1: 2, br2: 2, br3: 2 },
+    { name: "Salt", studio: 6, br1: 6, br2: 6, br3: 6 },
+    { name: "Pepper", studio: 6, br1: 6, br2: 6, br3: 6 },
+    { name: "Dishwashing Liquid", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Dishwashing Tablet", studio: 2, br1: 2, br2: 2, br3: 2 },
+    { name: "Tea Towel", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Chucks", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Sponge", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Brush", studio: 1, br1: 1, br2: 1, br3: 1 }
+  ],
+  "Fridge": [
+    { name: "UHT Full Cream Milk", studio: 2, br1: 2, br2: 3, br3: 3}
   ],
   "Bathroom": [
-    { name: "Soap Bar", required: 1, img: "soap.png" },
-    { name: "Toilet Paper", required: 2, img: "toilet-paper.png" },
-    { name: "Shampoo", required: 1, img: "shampoo.png" },
-    { name: "Conditioner", required: 1, img: "conditioner.png" },
-    { name: "Body Wash", required: 1, img: "bodywash.png" },
-    { name: "Body Lotion", required: 1, img: "lotion.png" }
-  ],
-  "Bedroom": [
-    { name: "Laundry Bag", required: 1, img: "bag.png" },
-    { name: "Laundry Note", required: 1, img: "note.png" }
+    { name: "Toilet Paper", studio: 2, br1: 2, br2: 2, br3: 2 },
+    { name: "Soap Bar", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Shampoo", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Conditioner", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Body Wash", studio: 1, br1: 1, br2: 1, br3: 1 },
+    { name: "Body Lotion", studio: 1, br1: 1, br2: 1, br3: 1 }
   ],
   "Laundry": [
-    { name: "Laundry Liquid", required: 1, img: "detergent.png" }
+    { name: "Laundry Liquid", studio: 2, br1: 2, br2: 2, br3: 2 }
   ],
-  "Study & Foyer": [
-    { name: "Cup Tray", required: 6, img: "tray.png" },
-    { name: "Notes", required: 1, img: "note.png" }
+  "Lounge": [
+    { name: "Cup Holder", studio: 6, br1: 6, br2: 6, br3: 6 }
+  ],
+  "Bedroom": [
+    { name: "Laundry Docket", studio: 2, br1: 2, br2: 2, br3: 2 },
+    { name: "Laundry Bag", studio: 1, br1: 1, br2: 1, br3: 1 }
   ]
 };
 
-// ===== STORAGE =====
+// 2. STATE MANAGEMENT
 let counts = JSON.parse(localStorage.getItem("counts")) || {};
-
-Object.values(categories).flat().forEach(item => {
-  if (!counts[item.name]) counts[item.name] = 0;
-});
+let lastType = document.getElementById("roomType").value;
 
 function save() {
   localStorage.setItem("counts", JSON.stringify(counts));
 }
 
-// ===== RENDER =====
+// 3. INITIALIZATION LOGIC
+// If counts is empty, fill it with required values based on current room selection
+if (Object.keys(counts).length === 0) {
+  const type = document.getElementById("roomType").value;
+  Object.values(categories).flat().forEach(item => {
+    counts[item.name] = item[type];
+  });
+  save();
+}
+
+// 4. CORE FUNCTIONS
+function getRequired(item) {
+  const type = document.getElementById("roomType").value;
+  return item[type];
+}
+
 function render() {
+  const type = document.getElementById("roomType").value;
   const list = document.getElementById("list");
   list.innerHTML = "";
 
   Object.keys(categories).forEach(category => {
-    const heading = document.createElement("h2");
-    heading.textContent = category;
-    list.appendChild(heading);
+    const h = document.createElement("h2");
+    h.textContent = category;
+    list.appendChild(h);
+
+    const header = document.createElement("div");
+    header.className = "header-row";
+    header.innerHTML = `
+      <span>Item</span>
+      <span style="text-align:center;">Current</span>
+      <span style="text-align:center;">Required</span>
+    `;
+    list.appendChild(header);
 
     categories[category].forEach(item => {
+      const required = getRequired(item);
+      const current = counts[item.name] || 0; // Fallback to 0 if undefined
+      const isComplete = current >= required;
+      const changed = lastType !== type;
+
       const div = document.createElement("div");
-      div.className = "item";
-
+      div.className = "item " + (isComplete ? "complete" : "missing");
       div.innerHTML = `
-        <img src="${item.img}" alt="">
         <span>${item.name}</span>
-        <button onclick="change('${item.name}', -1)">-</button>
-        <span class="count">${counts[item.name]}</span>
-        <button onclick="change('${item.name}', 1)">+</button>
-        <span class="required"> || ${item.required}</span>
+        <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+          <button onclick="change('${item.name}', -1)">-</button>
+          <span class="count">${current}</span>
+          <button onclick="change('${item.name}', 1)">+</button>
+        </div>
+        <span class="required ${changed ? 'flash' : ''}">${required}</span>
       `;
-
       list.appendChild(div);
     });
   });
+  lastType = type;
 }
 
-// ===== ACTIONS =====
 function change(item, value) {
-  counts[item] += value;
+  counts[item] = (counts[item] || 0) + value;
   if (counts[item] < 0) counts[item] = 0;
   save();
   render();
 }
 
 function clearAll() {
-  Object.keys(counts).forEach(item => counts[item] = 0);
+  const type = document.getElementById("roomType").value;
+  Object.values(categories).flat().forEach(item => {
+    counts[item.name] = item[type];
+  });
   save();
   render();
 }
 
-render();
+function copyMessage() {
+  const room = document.getElementById("roomNumber").value || "Unknown Room";
+  const service = document.getElementById("serviceType").value;
+  let missing = [];
 
-// ===== SERVICE WORKER =====
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+  Object.values(categories).flat().forEach(item => {
+    const required = getRequired(item);
+    const current = counts[item.name] || 0;
+    if (current < required) {
+      missing.push(`${item.name} (${required - current})`);
+    }
+  });
+
+  let text = `Please add missing item in Room ${room} (${service})\n`;
+  text += missing.length === 0 ? "All items complete." : "Missing:\n- " + missing.join("\n- ") + "\nThank You.";
+
+  navigator.clipboard.writeText(text).then(() => alert("Copied!"));
 }
+
+// 5. EVENT LISTENERS & INITIAL RENDER
+document.getElementById("roomType").addEventListener("change", render);
+render();
 </script>
 
 </body>
